@@ -19,7 +19,7 @@ export type DailyReport = {
 export function reportText(report: DailyReport) {
   return [
     "Aysis confirmed meal summary",
-    "Site: " + report.site.name + " (" + report.site.code + ")",
+    "Site: " + report.site.name,
     "Scope: " +
       (report.scope === "site" ? "All devices at site" : report.device.name),
     "Service date: " + report.serviceDate + " / " + report.site.timezone,

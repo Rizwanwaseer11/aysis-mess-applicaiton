@@ -91,10 +91,10 @@ test("confirmation requires this preview photo and an unexpired verification", (
   assert.equal(canConfirmPhoto(result, "current", now + 60000), false);
 });
 
-test("result timeout never discards a photo preview or unresolved serving", () => {
+test("result timeout clears displayed previews but never discards an unresolved serving", () => {
   const pending = { previewId: "id", decision: "PENDING_CONFIRMATION" };
   const approved = { previewId: "id", decision: "APPROVED" };
-  assert.equal(resultResetDelay(pending, false, true, 8), null);
+  assert.equal(resultResetDelay(pending, false, true, 8), 8000);
   assert.equal(resultResetDelay(approved, true, true, 8), null);
   assert.equal(resultResetDelay(approved, false, false, 8), null);
   assert.equal(resultResetDelay(approved, false, true, 8), 8000);

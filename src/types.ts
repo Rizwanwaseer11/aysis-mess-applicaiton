@@ -33,6 +33,7 @@ export type Result = {
   meal: { name: string } | null;
 };
 export type Recent = {
+  scanned_at?: string;
   id: string;
   full_name: string | null;
   decision: string;

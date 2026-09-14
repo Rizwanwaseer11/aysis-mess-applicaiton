@@ -23,18 +23,12 @@ export function resultResetDelay(
   result: PreviewState | null,
   unresolved: boolean,
   foreground: boolean,
-  seconds = 5,
+  seconds = 10,
 ) {
-  if (
-    !foreground ||
-    unresolved ||
-    !result ||
-    result.decision === "PENDING_CONFIRMATION"
-  )
-    return null;
+  if (!foreground || unresolved || !result) return null;
   const duration = Number.isFinite(seconds)
     ? Math.min(30, Math.max(2, seconds))
-    : 5;
+    : 10;
   return duration * 1000;
 }
 

@@ -93,3 +93,7 @@ All native HID/Bluetooth, pairing/recovery, camera, memory, latency and release 
 acceptance still need a physical pilot. JavaScript exports are not signed APK/IPA files.
 Read backend docs/SCANNER-ACCEPTANCE.md for the pilot checklist and
 backend docs/SCANNER-STRATEGY.md for the cited research and cache decision.
+
+## Branding and responsive screens
+
+The transparent company logo is assets/aysis-logo.png, rendered by BrandLogo. Scanner content stacks on phones and splits into scanner/context columns at 900px. The full workspace scrolls in short landscape windows. Daily records show the bootstrap site/tablet immediately and load today’s report on entry. Orientation remains default. Browser layout previews use native-module mocks and do not replace physical tablet checks.

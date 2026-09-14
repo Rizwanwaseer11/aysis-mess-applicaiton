@@ -114,6 +114,9 @@ function Scanner() {
   const [card, setCard] = useState("");
   const [busy, setBusy] = useState(false);
   const gate = useRef(false);
+  const queuedScan = useRef<string | null>(null);
+  const keyboardBuffer = useRef("");
+  const keyboardLast = useRef(0);
   const [error, setError] = useState("");
   const [online, setOnline] = useState(false);
   const [pending, setPending] = useState<Pending | null>(null);
@@ -124,6 +127,7 @@ function Scanner() {
   const [permission, requestPermission] = useCameraPermissions();
   const [now, setNow] = useState(Date.now());
   const input = useRef<TextInput>(null);
+  const scroll = useRef<ScrollView>(null);
   const syncing = useRef(false);
   const [foreground, setForeground] = useState(
     AppState.currentState !== "background" &&
@@ -141,6 +145,7 @@ function Scanner() {
   }, []);
   const invalidateDevice = useCallback(async () => {
     dispatch(clear());
+    queuedScan.current = null;
     setRecordsOpen(false);
     setActive(false);
     setOnline(false);
@@ -180,7 +185,6 @@ function Scanner() {
       !foreground ||
       busy ||
       pending ||
-      result ||
       camera ||
       recordsOpen ||
       manualInput
@@ -199,12 +203,7 @@ function Scanner() {
     manualInput,
   ]);
   useEffect(() => {
-    const delay = resultResetDelay(
-      result,
-      !!pending,
-      foreground,
-      boot?.device.settings?.resultDisplaySeconds,
-    );
+    const delay = resultResetDelay(result, !!pending, foreground, 10);
     if (delay === null) return;
     const timer = setTimeout(nextEmployee, delay);
     return () => clearTimeout(timer);
@@ -283,9 +282,10 @@ function Scanner() {
     };
   }, [sync]);
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    if (!active || !foreground) return;
+    const timer = setInterval(() => setNow(Date.now()), result ? 1000 : 60000);
     return () => clearInterval(timer);
-  }, []);
+  }, [active, foreground, result]);
   useEffect(() => {
     if (!active || !foreground) return;
     void sync();
@@ -385,6 +385,7 @@ function Scanner() {
     setPending(null);
     setClockOffset(Date.parse(value.serverTime) - Date.now());
     setResult(value);
+    scroll.current?.scrollTo({ y: 0, animated: true });
     setOnline(true);
     setCard("");
     setLoadedPhotoId(null);
@@ -393,19 +394,29 @@ function Scanner() {
   }
   function scan(value: string) {
     const qr = normalizeScan(value);
-    if (
-      !active ||
-      !foreground ||
-      recordsOpen ||
-      result ||
-      pending ||
-      gate.current
-    )
+    if (gate.current && active && foreground && !recordsOpen && qr) {
+      if (queuedScan.current) {
+        setError(
+          "Scanner is busy. Please rescan this card after the current check.",
+        );
+        return;
+      }
+      queuedScan.current = qr;
+      setCard("");
       return;
+    }
+    if (!active || !foreground || recordsOpen || pending) {
+      setCard("");
+      setError(
+        "Finish or retry the current request, then scan the card again.",
+      );
+      return;
+    }
     if (!qr) {
       setError("Scan a valid employee QR card.");
       return;
     }
+    nextEmployee();
     setCamera(false);
     void run(() =>
       send({
@@ -416,21 +427,58 @@ function Scanner() {
       }),
     );
   }
-  function manualScan() {
+  useEffect(() => {
     if (
+      Platform.OS !== "web" ||
       !active ||
       !foreground ||
       recordsOpen ||
-      result ||
-      pending ||
-      gate.current
+      manualInput ||
+      camera
     )
+      return;
+
+    const keydown = (event: KeyboardEvent) => {
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      const time = Date.now();
+      if (time - keyboardLast.current > 1000) keyboardBuffer.current = "";
+      keyboardLast.current = time;
+      if (event.key === "Enter" || event.key === "Tab") {
+        if (!keyboardBuffer.current) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const value = keyboardBuffer.current;
+        keyboardBuffer.current = "";
+        setCard("");
+        scan(value);
+      } else if (event.key.length === 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        keyboardBuffer.current = (keyboardBuffer.current + event.key).slice(
+          -202,
+        );
+        setCard(keyboardBuffer.current);
+      }
+    };
+    window.addEventListener("keydown", keydown, true);
+    return () => window.removeEventListener("keydown", keydown, true);
+  }, [active, foreground, recordsOpen, manualInput, camera, pending]);
+  useEffect(() => {
+    if (busy || pending || !active || !foreground || !queuedScan.current)
+      return;
+    const value = queuedScan.current;
+    queuedScan.current = null;
+    scan(value);
+  }, [busy, pending, active, foreground]);
+  function manualScan() {
+    if (!active || !foreground || recordsOpen || pending || gate.current)
       return;
     const number = normalizeEmployeeNumber(employeeNumber);
     if (!number) {
       setError("Enter the employee ID printed on the card, e.g. EMP-000001.");
       return;
     }
+    nextEmployee();
     setCamera(false);
     void run(() =>
       send({
@@ -447,11 +495,13 @@ function Scanner() {
   const serverNow = now + clockOffset;
   const clock = new Date(serverNow).toLocaleTimeString("en-GB", {
     timeZone: boot?.site.timezone || "Asia/Karachi",
+    hour: "2-digit",
+    minute: "2-digit",
   });
   return (
     <SafeAreaProvider>
       <SafeAreaView style={s.screen}>
-        {active && foreground && <Awake />}
+        {active && foreground && (busy || !!result || camera) && <Awake />}
         <StatusBar style="light" />
         <View
           style={[
@@ -516,7 +566,21 @@ function Scanner() {
                 ) : starting ? (
                   <ActivityIndicator color={colors.primary} />
                 ) : !active ? (
-                  <View style={[s.panel, width < 600 && { padding: 20 }]}>
+                  <View
+                    style={[
+                      s.panel,
+                      width < 600 && { padding: 20 },
+                      result && {
+                        borderColor:
+                          result.decision === "APPROVED"
+                            ? colors.green
+                            : result.decision === "DENIED"
+                              ? colors.red
+                              : colors.primary,
+                        borderWidth: 2,
+                      },
+                    ]}
+                  >
                     <BrandLogo width={180} />
                     <Text style={s.eyebrow}>WELCOME TO AYSIS</Text>
                     <Text style={s.heading}>Connect your tablet</Text>
@@ -547,13 +611,29 @@ function Scanner() {
                     />
                   </View>
                 ) : (
-                  <View style={[s.panel, width < 600 && { padding: 20 }]}>
+                  <View
+                    style={[
+                      s.panel,
+                      width < 600 && { padding: 20 },
+                      result && {
+                        borderColor:
+                          result.decision === "APPROVED"
+                            ? colors.green
+                            : result.decision === "DENIED"
+                              ? colors.red
+                              : colors.primary,
+                      },
+                    ]}
+                  >
                     {pending ? (
                       <>
-                        <Text style={s.heading}>Resolve previous scan</Text>
+                        <Text style={s.heading}>
+                          {busy ? "Checking card…" : "Resolve previous scan"}
+                        </Text>
                         <Text style={s.muted}>
-                          The previous request has no confirmed response. Retry
-                          it before scanning another employee.
+                          {busy
+                            ? "Please wait while the server validates this request."
+                            : "The previous request has no confirmed response. Retry it before scanning another employee."}
                         </Text>
                         <Button
                           title="Retry previous request"
@@ -685,20 +765,29 @@ function Scanner() {
                           </>
                         )}
                       </>
-                    ) : (
+                    ) : null}
+                    {!pending && (
                       <>
-                        <View
-                          style={[
-                            s.scanFrame,
-                            compact && { width: 72, height: 72, margin: 0 },
-                          ]}
-                        >
-                          <Text style={s.scanIcon}>▦</Text>
-                        </View>
-                        <Text style={s.eyebrow}>
-                          EMPLOYEE MEAL VERIFICATION
+                        {!result && (
+                          <View
+                            style={[
+                              s.scanFrame,
+                              compact && { width: 72, height: 72, margin: 0 },
+                            ]}
+                          >
+                            <Text style={s.scanIcon}>▦</Text>
+                          </View>
+                        )}
+                        {!result && (
+                          <Text style={s.eyebrow}>
+                            EMPLOYEE MEAL VERIFICATION
+                          </Text>
+                        )}
+                        <Text style={s.heading}>
+                          {result
+                            ? "Scan the next card anytime"
+                            : "Ready to scan"}
                         </Text>
-                        <Text style={s.heading}>Ready to scan</Text>
                         {!!boot?.device.settings?.kioskMessage && (
                           <Text style={s.muted}>
                             {boot.device.settings.kioskMessage}
@@ -752,35 +841,6 @@ function Scanner() {
                             />
                           </>
                         )}
-                        <TextInput
-                          ref={input}
-                          style={s.input}
-                          accessibilityLabel="Employee QR code"
-                          placeholder="Scan with USB / Bluetooth reader"
-                          placeholderTextColor={colors.muted}
-                          value={card}
-                          onChangeText={(value) => {
-                            if (/[\r\n]/.test(value)) {
-                              scan(value);
-                              setCard("");
-                            } else setCard(value);
-                          }}
-                          maxLength={202}
-                          showSoftInputOnFocus={false}
-                          onSubmitEditing={(event) =>
-                            scan(event.nativeEvent.text)
-                          }
-                          autoCapitalize="none"
-                          autoCorrect={false}
-                          editable={!busy}
-                          submitBehavior="submit"
-                          autoFocus
-                        />
-                        <Button
-                          title="Check employee"
-                          onPress={() => scan(card)}
-                          disabled={busy || !card}
-                        />
                         <Button
                           title={camera ? "Close camera" : "Use camera"}
                           secondary
@@ -808,6 +868,40 @@ function Scanner() {
                     )}
                   </View>
                 )}
+                {active && !recordsOpen && !manualInput && !camera && (
+                  <View style={s.contextCard}>
+                    <TextInput
+                      ref={input}
+                      style={s.input}
+                      accessibilityLabel="Employee QR code"
+                      placeholder="Scan with USB / Bluetooth reader"
+                      placeholderTextColor={colors.muted}
+                      value={card}
+                      onChangeText={(value) => {
+                        if (/[\r\n]/.test(value)) {
+                          scan(value);
+                          setCard("");
+                        } else setCard(value);
+                      }}
+                      maxLength={202}
+                      showSoftInputOnFocus={false}
+                      onSubmitEditing={(event) => {
+                        scan(event.nativeEvent.text);
+                        setCard("");
+                      }}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={true}
+                      submitBehavior="submit"
+                      autoFocus
+                    />
+                    <Button
+                      title="Check employee"
+                      onPress={() => scan(card)}
+                      disabled={busy || !card}
+                    />
+                  </View>
+                )}
                 {busy && <ActivityIndicator color={colors.primary} />}
                 {!!error && (
                   <Text accessibilityRole="alert" style={s.error}>
@@ -830,9 +924,14 @@ function Scanner() {
                 )}
               </View>
               {active && !recordsOpen && (
-                <SiteOverview boot={boot} recent={recent} />
+                <SiteOverview boot={boot} recent={recent} section="summary" />
               )}
             </View>
+            {active && !recordsOpen && (
+              <View style={{ width: "100%", maxWidth: 1240 }}>
+                <SiteOverview boot={boot} recent={recent} section="recent" />
+              </View>
+            )}
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
