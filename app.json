@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Aysis Mess Scanner",
+    "slug": "aysis-mess-scanner",
+    "version": "0.1.0",
+    "userInterfaceStyle": "dark",
+    "orientation": "default",
+    "android": {
+      "package": "com.aysis.mess.scanner"
+    },
+    "ios": {
+      "bundleIdentifier": "com.aysis.mess.scanner",
+      "supportsTablet": true
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Scan employee meal QR cards",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false,
+          "enableBackgroundRecording": false
+        }
+      ],
+      "expo-image"
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "aysis-mess-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit",
+    "build:android": "expo export --platform android",
+    "format": "prettier --write App.tsx index.ts src tests",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.12.0",
+    "expo": "~57.0.22",
+    "expo-audio": "~57.0.5",
+    "expo-camera": "~57.0.5",
+    "expo-crypto": "~57.0.3",
+    "expo-image": "~57.0.5",
+    "expo-keep-awake": "~57.0.2",
+    "expo-secure-store": "~57.0.4",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-redux": "^9.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "prettier": "^3.6.2",
+    "typescript": "~6.0.3"
+  },
+  "overrides": {
+    "xcode": {
+      "uuid": "11.1.1"
+    }
+  }
+}
