@@ -18,3 +18,7 @@ audit-local.json
 
 .work/
 dist-ios/
+
+# Native folders are generated from Expo config; signing stays with EAS.
+/android/
+/ios/

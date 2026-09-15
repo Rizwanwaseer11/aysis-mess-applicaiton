@@ -14,8 +14,8 @@ export const colors = {
 export const styles = StyleSheet.create({
   workspace: { width: "100%", maxWidth: 1240, alignSelf: "center", gap: 20 },
   workspaceWide: { flexDirection: "row", alignItems: "flex-start" },
-  mainColumn: { flex: 1, minWidth: 0, gap: 16, width: "100%" },
-  contextColumn: { flex: 1, minWidth: 0, gap: 16, width: "100%" },
+  mainColumn: { minWidth: 0, gap: 16, width: "100%" },
+  contextColumn: { minWidth: 0, gap: 16, width: "100%" },
   contextCard: {
     padding: 20,
     borderRadius: 18,

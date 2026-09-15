@@ -11,7 +11,10 @@ export default function SiteOverview({
   section?: "all" | "summary" | "recent";
 }) {
   return (
-    <View style={s.contextColumn}>
+    <View
+      style={s.contextColumn}
+      testID={section === "recent" ? "scanner-recent" : "scanner-site-overview"}
+    >
       {section !== "recent" && (
         <>
           <View style={s.contextCard}>

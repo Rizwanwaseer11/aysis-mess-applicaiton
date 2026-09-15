@@ -106,7 +106,9 @@ function Scanner() {
   const [employeeNumber, setEmployeeNumber] = useState("");
   const [clockOffset, setClockOffset] = useState(0);
   const { width, height } = useWindowDimensions();
-  const wide = width >= 900;
+  const [workspaceWidth, setWorkspaceWidth] = useState(0);
+  const wide = workspaceWidth >= 852;
+  const columnWidth = wide && !recordsOpen ? (workspaceWidth - 20) / 2 : "100%";
   const compact = height < 520;
   const [active, setActive] = useState(false);
   const [starting, setStarting] = useState(true);
@@ -190,7 +192,10 @@ function Scanner() {
       manualInput
     )
       return;
-    const timer = setTimeout(() => input.current?.focus(), 100);
+    const timer = setTimeout(() => {
+      input.current?.focus();
+      scroll.current?.scrollTo({ y: 0, animated: false });
+    }, 100);
     return () => clearTimeout(timer);
   }, [
     active,
@@ -534,6 +539,8 @@ function Scanner() {
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
           <ScrollView
+            ref={scroll}
+            key={recordsOpen ? "records" : "scanner"}
             style={{ flex: 1 }}
             contentContainerStyle={[
               s.content,
@@ -542,9 +549,18 @@ function Scanner() {
             keyboardShouldPersistTaps="handled"
           >
             <View
+              onLayout={(event) => {
+                const next = event.nativeEvent.layout.width;
+                setWorkspaceWidth((current) =>
+                  Math.abs(current - next) < 1 ? current : next,
+                );
+              }}
               style={[s.workspace, wide && !recordsOpen && s.workspaceWide]}
             >
-              <View style={s.mainColumn}>
+              <View
+                style={[s.mainColumn, { width: columnWidth }]}
+                testID="scanner-main-column"
+              >
                 {active && !pending && !result && !busy && (
                   <Button
                     secondary
@@ -554,6 +570,7 @@ function Scanner() {
                     onPress={() => {
                       setRecordsOpen(!recordsOpen);
                       setCamera(false);
+                      setManualInput(false);
                     }}
                   />
                 )}
@@ -893,7 +910,6 @@ function Scanner() {
                       autoCorrect={false}
                       editable={true}
                       submitBehavior="submit"
-                      autoFocus
                     />
                     <Button
                       title="Check employee"
@@ -924,7 +940,12 @@ function Scanner() {
                 )}
               </View>
               {active && !recordsOpen && (
-                <SiteOverview boot={boot} recent={recent} section="summary" />
+                <View
+                  style={{ width: columnWidth }}
+                  testID="scanner-site-column"
+                >
+                  <SiteOverview boot={boot} recent={recent} section="summary" />
+                </View>
               )}
             </View>
             {active && !recordsOpen && (

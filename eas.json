@@ -1,0 +1,38 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "environment": "preview",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "AYSIS_BUILD_MODE": "preview"
+      }
+    },
+    "production": {
+      "distribution": "internal",
+      "environment": "production",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "AYSIS_BUILD_MODE": "production"
+      }
+    },
+    "store": {
+      "environment": "production",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "AYSIS_BUILD_MODE": "production"
+      }
+    }
+  }
+}

@@ -31,6 +31,12 @@
         }
       ],
       "expo-image"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cb3decd9-e158-4fed-990f-d89a27ca5fd8"
+      }
+    },
+    "owner": "rizwan-ahmed"
   }
 }
