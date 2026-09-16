@@ -1,3 +1,4 @@
+import { employeePhotoCache, photoKey } from "./photoDisk";
 import * as SecureStore from "expo-secure-store";
 import * as Crypto from "expo-crypto";
 import { createDeviceSession } from "./session";
@@ -31,8 +32,46 @@ export function photoSource(path: string) {
     headers: { Authorization: `Device ${session.snapshot().token}` },
   };
 }
-export const restoreSession = session.restore;
-export const saveSession = session.save;
+// Authorization/eligibility is still checked by the server for every preview.
+export async function loadEmployeePhoto(path: string): Promise<string> {
+  const source = photoSource(path);
+  const snapshot = session.snapshot();
+  if (!snapshot.token) throw new Error("Device is not activated");
+  const [key, identity] = await Promise.all([
+    photoKey(source.uri),
+    photoKey(source.uri.split("?")[0]),
+  ]);
+  if (session.snapshot().revision !== snapshot.revision)
+    throw new Error("Photo session changed");
+  return employeePhotoCache.get(key, identity, async (signal) => {
+    const response = await fetch(source.uri, {
+      headers: source.headers,
+      signal,
+      cache: "no-store",
+    });
+    if (!response.ok)
+      throw new ApiError("Employee photo could not be loaded", response.status);
+    if (!response.headers.get("content-type")?.includes("image/webp"))
+      throw new Error("Invalid thumbnail format");
+    if (Number(response.headers.get("content-length")) > 512 * 1024)
+      throw new Error("Invalid thumbnail size");
+    return new Uint8Array(await response.arrayBuffer());
+  });
+}
+export async function forgetEmployeePhoto(path: string) {
+  await employeePhotoCache.forget(await photoKey(photoSource(path).uri));
+}
+export async function restoreSession() {
+  const restored = await session.restore();
+  if (!restored) await employeePhotoCache.clear();
+  return restored;
+}
+export async function saveSession(value: string | null) {
+  const clearing = employeePhotoCache.clear();
+  const saving = session.save(value); // Revoke memory credentials immediately, before awaiting disk cleanup.
+  const [, saved] = await Promise.all([clearing, saving]);
+  return saved;
+}
 export async function renewSession() {
   const expected = session.snapshot().revision;
   const value = await api<{ deviceToken: string }>("/renew", {});

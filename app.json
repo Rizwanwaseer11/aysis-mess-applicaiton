@@ -6,7 +6,11 @@
     "userInterfaceStyle": "dark",
     "orientation": "default",
     "android": {
-      "package": "com.aysismess"
+      "package": "com.aysismess",
+      "blockedPermissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.aysismess",
@@ -14,7 +18,7 @@
     },
     "plugins": [
       "expo-secure-store",
-       "expo-asset",
+      "expo-asset",
       [
         "expo-camera",
         {

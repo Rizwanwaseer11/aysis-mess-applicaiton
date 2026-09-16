@@ -112,3 +112,8 @@ Java 25; the Java 17 retry was stopped before completion. No installable or
 production-tested APK is claimed. Use EAS for managed production signing.
 
 See backend docs/BUILD-AND-TEST-2026-09-16.md for install/build steps and test limits.
+
+
+## Private thumbnail disk cache
+
+Employee thumbnails now use Expo FileSystem in the app-private cache directory, with up to 200 files / 200 MiB and an eight-hour expiry. The JavaScript cache retains metadata, not photo payloads. Files survive app restarts unless expired or removed by the OS. Changed photo versions replace the previous file on the next authorized scan; revocation/site changes clear the cache when detected. Keyboard scanners, camera and manual lookup use the same result path. No gallery/storage permission is requested. See backend docs/PHOTO-CACHE.md for tests and limits. A new APK is required because expo-file-system was added; run npm ci after pulling.

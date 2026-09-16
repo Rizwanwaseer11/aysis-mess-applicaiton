@@ -2,7 +2,7 @@
   "cli": {
     "appVersionSource": "remote"
   },
-  "build": {
+    "build": {
     "preview": {
       "distribution": "internal",
       "environment": "preview",
@@ -10,9 +10,11 @@
         "buildType": "apk"
       },
       "env": {
-        "AYSIS_BUILD_MODE": "preview"
+        "AYSIS_BUILD_MODE": "preview",
+        "EXPO_PUBLIC_API_URL": "https://z0p76k6m-4000.inc1.devtunnels.ms"
       }
     },
+
     "production": {
       "distribution": "internal",
       "environment": "production",
@@ -31,7 +33,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "AYSIS_BUILD_MODE": "production"
+        "AYSIS_BUILD_MODE": "preview"
       }
     }
   }

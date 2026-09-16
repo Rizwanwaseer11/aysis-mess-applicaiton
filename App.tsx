@@ -2,7 +2,8 @@ import LaunchSplash from "./src/components/LaunchSplash";
 import BrandLogo from "./src/components/BrandLogo";
 import SiteOverview from "./src/components/SiteOverview";
 import { normalizeScan, normalizeEmployeeNumber } from "./src/lib/input";
-import { Image } from "expo-image";
+import EmployeePhoto from "./src/components/EmployeePhoto";
+import { employeePhotoCache, photoKey } from "./src/lib/photoDisk";
 import { useKeepAwake } from "expo-keep-awake";
 import { Provider, useDispatch, useSelector } from "react-redux";
 import {
@@ -40,7 +41,6 @@ import {
   api,
   ApiError,
   installationId,
-  photoSource,
   restoreSession,
   renewSession,
   saveSession,
@@ -259,6 +259,9 @@ function Scanner() {
     try {
       const data = await api<Bootstrap>("/bootstrap");
       setClockOffset(Date.parse(data.serverTime) - Date.now());
+      await employeePhotoCache.setScope(
+        await photoKey(JSON.stringify([data.site.id, data.device.id])),
+      );
       setBoot(data);
       await api("/heartbeat", { appVersion: "0.1.0" });
       setOnline(true);
@@ -684,14 +687,15 @@ function Scanner() {
                         </Text>
                         {foreground && result.employee && (
                           <>
-                            <Image
-                              key={result.previewId}
-                              source={photoSource(result.employee.photoUrl)}
+                            <EmployeePhoto
+                              key={
+                                result.previewId +
+                                ":" +
+                                result.employee.photoUrl
+                              }
+                              path={result.employee.photoUrl}
+                              previewId={result.previewId}
                               style={s.photo}
-                              contentFit="contain"
-                              cachePolicy="none"
-                              recyclingKey={result.previewId}
-                              accessibilityLabel="Employee identity photo"
                               onLoad={() => setLoadedPhotoId(result.previewId)}
                               onError={() => {
                                 setPhotoFailed(true);
