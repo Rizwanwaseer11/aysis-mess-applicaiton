@@ -1,3 +1,4 @@
+import LaunchSplash from "./src/components/LaunchSplash";
 import BrandLogo from "./src/components/BrandLogo";
 import SiteOverview from "./src/components/SiteOverview";
 import { normalizeScan, normalizeEmployeeNumber } from "./src/lib/input";
@@ -75,9 +76,14 @@ function Button({
 }
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState(true);
+  const finishIntro = useCallback(() => setShowIntro(false), []);
   return (
     <Provider store={store}>
-      <Scanner />
+      <View style={{ flex: 1, backgroundColor: colors.page }}>
+        <Scanner />
+        {showIntro && <LaunchSplash onDone={finishIntro} />}
+      </View>
     </Provider>
   );
 }

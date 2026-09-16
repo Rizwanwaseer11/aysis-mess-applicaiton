@@ -97,3 +97,18 @@ backend docs/SCANNER-STRATEGY.md for the cited research and cache decision.
 ## Branding and responsive screens
 
 The transparent company logo is assets/aysis-logo.png, rendered by BrandLogo. Scanner content stacks on phones and splits into scanner/context columns at 900px. The full workspace scrolls in short landscape windows. Daily records show the bootstrap site/tablet immediately and load today’s report on entry. Orientation remains default. Browser layout previews use native-module mocks and do not replace physical tablet checks.
+
+## September 16 checkpoint
+
+Report/back layout now uses measured columns and content-sized panels. Aysis logo
+and Aysis Mess Tracking title fade/scale in and out on launch, with reduced-motion
+support and a three-second fallback. Native splash branding requires a new APK.
+
+Duplicate Expo native packages were deduplicated; npm run check:native now rejects
+duplicates in CI and EAS post-install. npm run android opens Expo Go;
+npm run android:native compiles locally. APK profiles and the Expo project are ready.
+Building was stopped at the user's request. The earlier local build failed under
+Java 25; the Java 17 retry was stopped before completion. No installable or
+production-tested APK is claimed. Use EAS for managed production signing.
+
+See backend docs/BUILD-AND-TEST-2026-09-16.md for install/build steps and test limits.

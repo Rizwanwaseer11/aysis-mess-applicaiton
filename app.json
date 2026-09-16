@@ -1,19 +1,20 @@
 {
   "expo": {
-    "name": "Aysis Mess Scanner",
+    "name": "Aysis Mess",
     "slug": "aysis-mess-scanner",
     "version": "0.1.0",
     "userInterfaceStyle": "dark",
     "orientation": "default",
     "android": {
-      "package": "com.aysis.mess.scanner"
+      "package": "com.aysismess"
     },
     "ios": {
-      "bundleIdentifier": "com.aysis.mess.scanner",
+      "bundleIdentifier": "com.aysismess",
       "supportsTablet": true
     },
     "plugins": [
       "expo-secure-store",
+       "expo-asset",
       [
         "expo-camera",
         {
@@ -30,7 +31,20 @@
           "enableBackgroundRecording": false
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#020617",
+          "image": "./assets/aysis-logo.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#020617",
+            "image": "./assets/aysis-logo.png"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
