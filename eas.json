@@ -10,8 +10,20 @@
         "buildType": "apk"
       },
       "env": {
-        "AYSIS_BUILD_MODE": "preview",
-        "EXPO_PUBLIC_API_URL": "https://z0p76k6m-4000.inc1.devtunnels.ms"
+        "AYSIS_BUILD_MODE": "production",
+        "EXPO_PUBLIC_API_URL": "https://aysismess.tech/"
+      }
+    },
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "environment": "production",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "AYSIS_BUILD_MODE": "production",
+        "EXPO_PUBLIC_API_URL": "https://aysismess.tech/"
       }
     },
 
@@ -23,7 +35,8 @@
         "buildType": "apk"
       },
       "env": {
-        "AYSIS_BUILD_MODE": "production"
+        "AYSIS_BUILD_MODE": "production",
+        "EXPO_PUBLIC_API_URL": "https://aysismess.tech/"
       }
     },
     "store": {
@@ -33,7 +46,8 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "AYSIS_BUILD_MODE": "preview"
+        "AYSIS_BUILD_MODE": "production",
+        "EXPO_PUBLIC_API_URL": "https://aysismess.tech/"
       }
     }
   }

@@ -5,7 +5,7 @@ import { createDeviceSession } from "./session";
 
 export const origin = (
   process.env.EXPO_PUBLIC_API_URL ||
-  (__DEV__ ? "https://z0p76k6m-4000.inc1.devtunnels.ms/" : "")
+  (__DEV__ ? "https://aysismess.tech/" : "")
 ).replace(/\/$/, "");
 const session = createDeviceSession({
   read: () => SecureStore.getItemAsync("device-token"),
